@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
 // GetAnagrams gets all anagrams for a given work
 func GetAnagrams(c *gin.Context) {
 	name := c.Param("word")
@@ -16,6 +17,7 @@ func GetAnagrams(c *gin.Context) {
 		"message": trimedName,
 	})
 }
+
 // UpdateCorpus updates the corpus with a list of words supplied by client
 func UpdateCorpus(c *gin.Context) {
 	var requestBody RequestBody
@@ -26,6 +28,7 @@ func UpdateCorpus(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, gin.H{"user": requestBody})
 }
+
 // DeleteWord deletes word specified in path
 func DeleteWord(c *gin.Context) {
 	// TODO
@@ -33,6 +36,7 @@ func DeleteWord(c *gin.Context) {
 	// trimedName := strings.TrimSuffix(name, ".json")
 	c.Status(http.StatusNoContent)
 }
+
 // DropCorpus drops everthing in the corpus
 func DropCorpus(c *gin.Context) {
 	// TODO
