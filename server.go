@@ -1,42 +1,38 @@
 package main
 
 import (
-	"net/http"
-	"strings"
+	"flag"
+	"fmt"
+	"os"
+	// "strings"
+	"app/anagram"
 
 	"github.com/gin-gonic/gin"
 )
 
-type RequestBody struct {
-	Words []string `json:"words"`
-}
-
-func getAnagrams(c *gin.Context) {
-	name := c.Param("word")
-	trimedName := strings.TrimSuffix(name, ".json")
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "posted",
-		"message": trimedName,
-	})
-}
-
-func updateCorpus(c *gin.Context) {
-	var requestBody RequestBody
-	err := c.BindJSON(&requestBody)
-	if err != nil {
-		panic(err)
-	}
-	c.JSON(http.StatusCreated, gin.H{"user": requestBody})
-}
-
 func main() {
+	// check corpus file is passed on command line
+	flag.Parse()
+	args := flag.Args()
+	if len(args) < 1 {
+		fmt.Println("Input file is missing.")
+		os.Exit(1)
+	}
+	fileName := os.Args[0]
+	// populate cache on separate goroutine
+	go anagram.ReadLines(fileName)
+
+	// initialize http server/middleware
 	router := gin.Default()
 
-	// get all anagrams for a given work
-	router.GET("/anagrams/:word", getAnagrams)
+	// routes
+	router.GET("/anagrams/:word", anagram.GetAnagrams)
 
-	// update the corpus with a list of words supplied by client
-	router.POST("/words.json", updateCorpus)
+	router.POST("/words.json", anagram.UpdateCorpus)
+
+	router.DELETE("/words/:word", anagram.DeleteWord)
+
+	router.DELETE("/words.json", anagram.DropCorpus)
 
 	router.Run()
 }
