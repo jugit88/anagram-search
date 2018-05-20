@@ -28,30 +28,33 @@ func readLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-func sortString(w string) string {
-	s := strings.Split(w, "")
+func SortString(w string) string {
+	word := strings.ToLower(w)
+	s := strings.Split(word, "")
 	sort.Strings(s)
 	return strings.Join(s, "")
 }
 
+// TODO need to add deterministic hashing to remove dups
+
 func init() {
-	var anagrams Anagrams
-	startReadFile := time.Now()
+	Client = RedisClient()
+	// read in file
 	file := "dictionary.txt"
 	words, _ := readLines(file)
-	t1 := time.Now()
-	fmt.Println(t1.Sub(startReadFile))
 	sliceLength := len(words)
-	client := RedisClient()
+	// create a pipeline to batch process transactions
+	pipe := Client.Pipeline()
+	pipe.Expire("pipeline_counter", time.Second)
 	startWriteCache := time.Now()
 	for i := 0; i < sliceLength; i++ {
 		word := words[i]
-		key := sortString(word)
-		client.LPush(key, &anagrams)
+		key := SortString(word)
+		pipe.LPush(key, word)
 	}
+	pipe.Exec()
 
 	t := time.Now()
 	elapsed := t.Sub(startWriteCache)
 	fmt.Println(elapsed)
-	// ch := make(chan string, )
 }

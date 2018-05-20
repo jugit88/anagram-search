@@ -10,11 +10,16 @@ import (
 // GetAnagrams gets all anagrams for a given work
 func GetAnagrams(c *gin.Context) {
 	name := c.Param("word")
-	trimedName := strings.TrimSuffix(name, ".json")
-	// TODO: call db to get anagrams for trimmedName
+	name = strings.TrimSuffix(name, ".json")
+	key := SortString(name)
+	// get all elements from key
+	val, err := Client.LRange(key, 0, -1).Result()
+	if err != nil {
+		// TODO: improve error handling
+		c.Error(err)
+	}
 	c.JSON(http.StatusOK, gin.H{
-		"status":  "posted",
-		"message": trimedName,
+		"anagrams": val,
 	})
 }
 
@@ -22,23 +27,42 @@ func GetAnagrams(c *gin.Context) {
 func UpdateCorpus(c *gin.Context) {
 	var requestBody RequestBody
 	err := c.BindJSON(&requestBody)
-	// TODO: call db to add words to corpus
 	if err != nil {
 		panic(err)
+	}
+	length := len(requestBody.Words)
+	for i := 0; i < length; i++ {
+		word := requestBody.Words[i]
+		key := SortString(word)
+		err := Client.LPush(key, word).Err()
+		if err != nil {
+			// TODO: improve error handling
+			c.Error(err)
+		}
 	}
 	c.JSON(http.StatusCreated, gin.H{"user": requestBody})
 }
 
 // DeleteWord deletes word specified in path
 func DeleteWord(c *gin.Context) {
-	// TODO
-	// name := c.Param("word")
-	// trimedName := strings.TrimSuffix(name, ".json")
+	word := c.Param("word")
+	word = strings.TrimSuffix(word, ".json")
+	key := SortString(word)
+	err := Client.LRem(key, 0, word).Err()
+	if err != nil {
+		// TODO: improve error handling
+		c.Error(err)
+	}
 	c.Status(http.StatusNoContent)
 }
 
 // DropCorpus drops everthing in the corpus
 func DropCorpus(c *gin.Context) {
-	// TODO
-	c.Status(http.StatusNoContent)
+	err := Client.FlushDBAsync().Err()
+	status := http.StatusNoContent
+	if err != nil {
+		// TODO better error handling failed to drop corpus improve error handling
+		c.Error(err)
+	}
+	c.Status(status)
 }
