@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -52,7 +53,16 @@ func RedisClient() *redis.Client {
 		DB:          config.Redis.Db,
 		DialTimeout: time,
 	})
-	pong, err := client.Ping().Result()
-	fmt.Println(pong, err)
+	err := client.Ping().Err()
+	if err != nil {
+		log.Fatalln("failed to connect to Redis")
+	}
 	return client
+}
+
+// GenerateKey removes case sensitivity and sorts the word
+func GenerateKey(word string) (string, string) {
+	normalized := strings.ToLower(word)
+	key := SortString(normalized)
+	return key, normalized
 }

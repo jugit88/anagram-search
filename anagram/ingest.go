@@ -3,15 +3,39 @@ package anagram
 import (
 	"bufio"
 	"fmt"
-	"time"
-	// "fmt"
+	"log"
 	"os"
 	"sort"
 	"strings"
-	// "time"
+	"time"
 )
 
-type sortRunes []rune
+func init() {
+	Client = RedisClient()
+	// read in file
+	file := "dictionary.txt"
+	words, err := readLines(file)
+	if err != nil {
+		log.Fatalln("failed to read file.")
+	}
+	// create a pipeline to process transactions in batches
+	pipe := Client.Pipeline()
+	pipe.Expire("pipeline_counter", time.Second)
+
+	startCacheWrites := time.Now() //track for cache writes
+
+	sliceLength := len(words)
+	for i := 0; i < sliceLength; i++ {
+		key, _ := GenerateKey(words[i])
+		pipe.SAdd(key, words[i])
+	}
+	pipe.Exec()
+
+	t := time.Now()
+	elapsed := t.Sub(startCacheWrites)
+	message := fmt.Sprintf("INGEST FINISHED: loaded and parsed file into memory and completed %d writes to Redis in %s", sliceLength, elapsed.String())
+	log.Println(message)
+}
 
 func readLines(path string) ([]string, error) {
 	file, err := os.Open(path)
@@ -28,33 +52,9 @@ func readLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+// SortString sorts a given string by split and join method
 func SortString(w string) string {
-	word := strings.ToLower(w)
-	s := strings.Split(word, "")
+	s := strings.Split(w, "")
 	sort.Strings(s)
 	return strings.Join(s, "")
-}
-
-// TODO need to add deterministic hashing to remove dups
-
-func init() {
-	Client = RedisClient()
-	// read in file
-	file := "dictionary.txt"
-	words, _ := readLines(file)
-	sliceLength := len(words)
-	// create a pipeline to batch process transactions
-	pipe := Client.Pipeline()
-	pipe.Expire("pipeline_counter", time.Second)
-	startWriteCache := time.Now()
-	for i := 0; i < sliceLength; i++ {
-		word := words[i]
-		key := SortString(word)
-		pipe.LPush(key, word)
-	}
-	pipe.Exec()
-
-	t := time.Now()
-	elapsed := t.Sub(startWriteCache)
-	fmt.Println(elapsed)
 }
