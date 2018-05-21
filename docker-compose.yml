@@ -5,7 +5,7 @@ services:
     ports: 
       - "6379:6379"
   anagram:
-    image: anagram
+    image: "jeremyudis/anagram"
     ports:
       - "3000:8080"
       - "8080:8080"
