@@ -5,7 +5,8 @@
     2. unzip and cd into the root directory(`cd /anagram-search-master`)
     3. Start the server: `docker-compose up`
         - This will pull down the images needed to run the program
-        NOTE: the server says it's listening on 8080, but the container exposes ports 3000 and 8080, so you can run the ruby tests w/o changing the port
+        NOTE: the server says it's listening on 8080, but the container exposes ports 3000 and 8080, so you can run the ruby            tests w/o changing the port
+        IMPORTANT: if you want to stop the server gracefully use docker-compose down. Killing the container can leave it in a           funky state.
 ### Documentation for running the optional endpoints
     1. Endpoint that takes a set of words and returns whether or not       they are all anagrams of each other 
         - POST /words/check
