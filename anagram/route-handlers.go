@@ -90,6 +90,18 @@ func IsAnagram(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"isSetAnagrams": isAnagram})
 }
 
+// DeleteKey deletes the key and all assocated values from the database
+func DeleteKey(c *gin.Context) {
+	word := c.Param("word")
+	key, _ := GenerateKey(word)
+	// async delete
+	err := Client.Unlink(key).Err()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, failureMessage("could not delete from cache"))
+	}
+	c.Status(http.StatusNoContent)
+}
+
 func failureMessage(message string) gin.H {
 	return gin.H{"error": message}
 }
@@ -110,7 +122,7 @@ func (requestBody *RequestBody) parseRequestBody(c *gin.Context) ([]string, erro
 func (anagrams *Anagrams) applyLimit(limit string) {
 	i, err := strconv.Atoi(limit)
 	if err != nil || i < 0 {
-		log.Println("limit must be a positive integer, ignoring limit")
+		log.Println("limit must be a whole number, ignoring limit")
 	} else {
 		// this ensures index can never be out of range
 		if i <= len(anagrams.Words) {

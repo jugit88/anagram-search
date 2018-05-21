@@ -2,7 +2,6 @@ package main
 
 import (
 	"app/anagram"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,13 +19,13 @@ func main() {
 
 	router.DELETE("/words.json", anagram.DropCorpus)
 
+	// optional endpoints
+
 	// check if a given set of words are anagrams
 	router.POST("/words/check", anagram.IsAnagram)
 
-	// health check
-	router.GET("/system_health", func(c *gin.Context) {
-		c.Status(http.StatusOK)
-	})
+	// delete all a word and all its anagrams
+	router.DELETE("/anagrams/:word", anagram.DeleteKey)
 
 	router.Run()
 

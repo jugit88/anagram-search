@@ -10,6 +10,15 @@
     1. Endpoint that takes a set of words and returns whether or not       they are all anagrams of each other 
         - POST /words/check
         - ex: curl -i -X POST -d '{ "words": ["read", "dear", "dare"] }' http://localhost:8080/words/check
-    2.     
+    2. Endpoint to delete a word *and all of its anagrams*
+        - DELETE /anagrams/:word
+    3. 
+### Thoughts 
+
+- I chose Redis as my datastore for its fast read/write speed as well as its support for complex types. 
+- I also thought Redis was the right choice for this application as the ultimate goal was to optimize for fast lookups. 
+- This lies a tradeoff where the data model is optimized for fast reads, but not as flexible as a relational model, for example. 
+- If I had a lot of time to work on this project, I would like to add some persistent storage to back up redis, and when doing ingests, I would like to have some event driven system to sync the databases.      
+    
 
     
